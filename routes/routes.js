@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const Model = require("../models/model");
-
+const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 //showing satus of api
 router.get("/status", (request, response) => {
   const status = { status: "Running" };
@@ -70,4 +71,49 @@ router.delete("/delete/:id", async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 });
+
+//login using jwt
+router.get("/getUserLogin", (req, res) => {
+  res.json({ message: "welcome to user login API " });
+});
+
+router.post("/posts", verifyToken, async (req, res) => {
+  jwt.verify(req.token, "secretkey", async (err, authData) => {
+    if (err) {
+      res.sendStatus(403);
+    } else {
+      await mongoose.connection.db.collection("user").insertOne(authData.user);
+      res.json({
+        message: "user post created",
+        authData,
+      });
+    }
+  });
+});
+
+router.post("/userLogin", (req, res) => {
+  const user = {
+    id: req.body.id,
+    username: req.body.username,
+    email: req.body.email,
+  };
+
+  jwt.sign({ user: user }, "secretkey", (err, token) => {
+    res.json({
+      token,
+    });
+  });
+});
+
+function verifyToken(req, res, next) {
+  const bearerHeader = req.headers["authorization"];
+  if (bearerHeader && typeof bearerHeader !== "unefined") {
+    const bearerToken = bearerHeader.split(" ")[1];
+    req.token = bearerToken;
+    next();
+  } else {
+    res.sendStatus(403);
+  }
+}
+router.use(express.json());
 module.exports = router;
