@@ -1,0 +1,19 @@
+service: user-api-project
+package:
+  exclude:
+    - frontend/**
+frameworkVersion: "3"
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: dev
+  region: us-east-1
+  timeout: 15
+functions:
+  userAPI:
+    handler: handler.userAPI
+    events:
+      - http: ANY /{proxy+}
+      - http: ANY /
+    environment:
+      DATABASE_URL: mongodb+srv://choureypravesh:pravesh1992@mymongodbcluster.yuximbj.mongodb.net/

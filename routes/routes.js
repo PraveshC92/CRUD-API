@@ -3,6 +3,7 @@ const router = express.Router();
 const Model = require("../models/model");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 //showing satus of api
 router.get("/status", (request, response) => {
   const status = { status: "Running" };
@@ -13,8 +14,9 @@ router.get("/status", (request, response) => {
 
 router.post("/post", async (req, res) => {
   const data = new Model({
-    name: req.body.name,
-    age: req.body.age,
+    userName: req.body.userName,
+    userPhone: req.body.userPhone,
+    userAge: req.body.userAge,
   });
 
   try {
@@ -91,14 +93,16 @@ router.post("/posts", verifyToken, async (req, res) => {
   });
 });
 
-router.post("/userLogin", (req, res) => {
+router.post("/userRegisteration", async (req, res) => {
   const user = {
     id: req.body.id,
     username: req.body.username,
     email: req.body.email,
+    password: await bcrypt.hash(req.body.password, 10),
   };
+  require("dotenv").config;
 
-  jwt.sign({ user: user }, "secretkey", (err, token) => {
+  jwt.sign({ user: user }, "secretkey", { expiresIn: "1m" }, (err, token) => {
     res.json({
       token,
     });
